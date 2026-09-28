@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>สมุดงบรายเดือน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2EC; --surface:#FAFCF8; --ink:#17372B; --muted:#5C7268; --line:#D3DDD4;
+  --need:#2B5C8A; --want:#A8641A; --save:#2F7D52; --danger:#B42318; --track:#E1E8E1;
+  --btn:#17372B; --btn-ink:#FAFCF8;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101814; --surface:#18231E; --ink:#E3ECE5; --muted:#93A89D; --line:#2A3831;
+    --need:#7AA9D6; --want:#E0A45C; --save:#6CC191; --danger:#F07A6E; --track:#24322B;
+    --btn:#E3ECE5; --btn-ink:#101814;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101814; --surface:#18231E; --ink:#E3ECE5; --muted:#93A89D; --line:#2A3831;
+  --need:#7AA9D6; --want:#E0A45C; --save:#6CC191; --danger:#F07A6E; --track:#24322B;
+  --btn:#E3ECE5; --btn-ink:#101814;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",Tahoma,"Leelawadee UI",sans-serif;font-size:16px;line-height:1.55;font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%}
+main{max-width:560px;margin:0 auto;padding:0 16px 110px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--save);outline-offset:2px}
+
+header.top{display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px}
+.month-nav{display:flex;align-items:center;gap:6px}
+.month-nav button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:20px;line-height:1}
+.month-title{font-size:1.5rem;font-weight:700;letter-spacing:-.01em;margin:0}
+.phase-chip{font-size:.8rem;padding:4px 10px;border-radius:999px;border:1px solid var(--save);color:var(--save);white-space:nowrap}
+
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.sheet h2{font-size:1.05rem;margin:0 0 10px;font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+
+.income{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px dashed var(--line);padding-bottom:10px;margin-bottom:6px}
+.income strong{font-size:1.35rem}
+
+.ledger-row{padding:12px 0;border-bottom:1px solid var(--line)}
+.ledger-row:last-child{border-bottom:0}
+.ledger-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ledger-name{font-weight:600;display:flex;align-items:center;gap:8px}
+.dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+.ledger-nums{font-size:.9rem;color:var(--muted);text-align:right}
+.bar{height:10px;border-radius:5px;background:var(--track);overflow:hidden;margin:8px 0 4px}
+.bar > i{display:block;height:100%;border-radius:5px;transition:width .35s ease}
+.ledger-foot{display:flex;justify-content:space-between;font-size:.85rem}
+.over{color:var(--danger);font-weight:600}
+
+.fund-big{display:flex;justify-content:space-between;align-items:baseline}
+.fund-big strong{font-size:1.25rem}
+
+.tx{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.tx:last-child{border-bottom:0}
+.tx-main{flex:1;min-width:0}
+.tx-cat{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-amt{font-weight:600;white-space:nowrap}
+.icon-btn{border:0;background:none;color:var(--muted);width:36px;height:36px;border-radius:8px;font-size:18px}
+.icon-btn:hover{background:var(--track)}
+
+label.f{display:block;margin:12px 0 4px;font-size:.9rem;color:var(--muted)}
+input[type=number],input[type=text],input[type=date],select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:1rem}
+input[type=range]{width:100%;accent-color:var(--save)}
+.seg{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.seg button{padding:10px 8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:.9rem}
+.seg button[aria-pressed="true"]{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.primary{width:100%;padding:14px;border-radius:12px;border:0;background:var(--btn);color:var(--btn-ink);font-weight:600;font-size:1rem;margin-top:16px}
+.secondary{padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:500}
+.row-btns{display:flex;gap:8px;margin-top:16px}
+.row-btns > *{flex:1}
+.err{color:var(--danger);font-size:.9rem;margin-top:8px;min-height:1.2em}
+
+.steps{display:flex;gap:6px;margin:4px 0 14px}
+.steps span{flex:1;height:4px;border-radius:2px;background:var(--track)}
+.steps span.on{background:var(--save)}
+.alloc{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+.alloc:last-child{border-bottom:0}
+.rec{background:var(--bg);border-radius:10px;padding:12px;font-size:.92rem;margin-bottom:10px}
+.pct-big{font-size:2.2rem;font-weight:700;text-align:center;margin:6px 0 0}
+
+.cat-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.cat-item:last-child{border-bottom:0}
+.cat-item input{flex:1;padding:8px 10px}
+.cat-item select{width:auto;padding:8px}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav.tabs .in{display:grid;grid-template-columns:repeat(4,1fr);max-width:560px;width:100%}
+nav.tabs button{border:0;background:none;padding:10px 4px 12px;font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabs button .ic{font-size:1.25rem;line-height:1}
+nav.tabs button[aria-current="page"]{color:var(--ink);font-weight:600}
+
+.empty{text-align:center;padding:22px 8px}
+.banner{background:var(--danger);color:#fff;padding:10px 14px;border-radius:10px;margin-top:10px;font-size:.9rem}
+
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.modal{background:var(--surface);border-radius:16px;padding:18px;max-width:420px;width:100%}
+.modal p{margin:0 0 6px}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--btn);color:var(--btn-ink);padding:10px 16px;border-radius:10px;font-size:.92rem;z-index:30;max-width:90vw}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion: reduce){.bar > i{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <div class="month-nav">
+      <button id="prevM" aria-label="เดือนก่อน">‹</button>
+      <h1 class="month-title" id="monthTitle"></h1>
+      <button id="nextM" aria-label="เดือนถัดไป">›</button>
+    </div>
+    <span class="phase-chip" id="phaseChip"></span>
+  </header>
+  <div id="storageBanner" class="banner" hidden>เบราว์เซอร์นี้บันทึกข้อมูลไม่ได้ ข้อมูลจะหายเมื่อปิดหน้า ให้ Export CSV เก็บไว้ก่อนปิด</div>
+  <section id="view"></section>
+</main>
+
+<nav class="tabs" aria-label="เมนูหลัก"><div class="in">
+  <button data-tab="summary"><span class="ic">▤</span>สรุป</button>
+  <button data-tab="add"><span class="ic">＋</span>จดรายการ</button>
+  <button data-tab="budget"><span class="ic">◔</span>ตั้งงบ</button>
+  <button data-tab="settings"><span class="ic">⚙</span>ตั้งค่า</button>
+</div></nav>
+
+<div id="modalRoot"></div>
+<div id="toast" class="toast" hidden role="status"></div>
+<input type="file" id="fileIn" accept=".csv,text/csv" hidden>
+
+<script>
+(function(){
+"use strict";
+const KEY = "budget503020:v1";
+const NEED_PCT = 50;
+const GROUPS = { need:"จำเป็น", want:"ส่วนตัว" };
+const KINDS = {
+  expense:"รายจ่าย", efund_in:"โอนเข้ากองทุนฉุกเฉิน",
+  efund_out:"ถอนจากกองทุนฉุกเฉิน", invest:"ลงทุนระยะยาว"
+};
+const DEFAULT_CATS = [
+  ["ที่พัก/ค่าเช่า","need"],["อาหารประจำวัน","need"],["เดินทาง","need"],
+  ["ค่าน้ำ ไฟ โทรศัพท์","need"],["ผ่อนชำระหนี้","need"],["ของใช้จำเป็น","need"],
+  ["กินเที่ยว/ร้านอาหาร","want"],["ช้อปปิ้ง","want"],["บันเทิง/เกม","want"],
+  ["งานอดิเรก","want"],["อื่นๆ","want"]
+];
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = n => new Intl.NumberFormat("th-TH",{maximumFractionDigits:2}).format(Math.round((n||0)*100)/100) + " ฿";
+const pad = n => String(n).padStart(2,"0");
+const todayISO = () => { const d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); };
+const monthOf = iso => iso.slice(0,7);
+const shiftMonth = (key, n) => { const [y,m]=key.split("-").map(Number); const d=new Date(y,m-1+n,1); return d.getFullYear()+"-"+pad(d.getMonth()+1); };
+const monthLabel = key => { const [y,m]=key.split("-").map(Number); return new Date(y,m-1,1).toLocaleDateString("th-TH",{month:"long",year:"numeric"}); };
+
+// ---------- storage ----------
+let storageOK = true;
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw){ const d = JSON.parse(raw); if(d && d.categories && d.tx && d.months) return d; }
+  }catch(e){ storageOK = false; }
+  return { categories: DEFAULT_CATS.map(([name,group]) => ({id:uid(), name, group})), months:{}, tx:[] };
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(data)); }
+  catch(e){ storageOK = false; $("#storageBanner").hidden = false; }
+}
+let data = load();
+if(!storageOK) $("#storageBanner").hidden = false;
+
+let viewMonth = monthOf(todayISO());
+let tab = "summary";
+let step = 1, draft = null;
+let addKind = "expense";
+
+// ---------- calculations ----------
+const catById = id => data.categories.find(c => c.id === id);
+const txIn = key => data.tx.filter(t => monthOf(t.date) === key);
+function monthIncome(key){ const m = data.months[key]; return m ? (Number(m.salary)||0) + (Number(m.extra)||0) : 0; }
+function spentBy(key){
+  const r = {need:0, want:0, save:0, efund_out:0};
+  txIn(key).forEach(t => {
+    if(t.kind === "expense"){ const c = catById(t.cat); r[c ? c.group : "want"] += t.amount; }
+    else if(t.kind === "efund_in" || t.kind === "invest") r.save += t.amount;
+    else if(t.kind === "efund_out") r.efund_out += t.amount;
+  });
+  return r;
+}
+function efundBalance(){
+  return data.tx.reduce((s,t) => s + (t.kind==="efund_in" ? t.amount : t.kind==="efund_out" ? -t.amount : 0), 0);
+}
+function investTotal(){ return data.tx.reduce((s,t) => s + (t.kind==="invest" ? t.amount : 0), 0); }
+function efundTarget(){
+  const current = monthOf(todayISO());
+  const byMonth = {};
+  data.tx.forEach(t => {
+    if(t.kind !== "expense") return;
+    const c = catById(t.cat); if(!c || c.group !== "need") return;
+    const k = monthOf(t.date); byMonth[k] = (byMonth[k]||0) + t.amount;
+  });
+  let keys = Object.keys(byMonth).filter(k => k < current).sort().slice(-6);
+  if(keys.length){
+    const avg = keys.reduce((s,k)=>s+byMonth[k],0) / keys.length;
+    return { value: avg*3, basis: `เฉลี่ยรายจ่ายจำเป็น ${keys.length} เดือนที่ผ่านมา × 3` };
+  }
+  const inc = monthIncome(viewMonth) || monthIncome(current);
+  if(inc) return { value: inc*NEED_PCT/100*3, basis:"ประมาณจากงบจำเป็น × 3 จนกว่าจะมีรายจ่ายจริงครบเดือน" };
+  return { value: 0, basis:"ตั้งงบเดือนแรกก่อนเพื่อคำนวณเป้า" };
+}
+function phase(){ const t = efundTarget().value; return (t > 0 && efundBalance() >= t) ? 2 : 1; }
+function recommendSave(key){
+  const prev = shiftMonth(key,-1);
+  const inc = monthIncome(prev);
+  const s = spentBy(prev);
+  const used = s.need + s.want;
+  if(!inc || used === 0) return { pct:15, why:"ยังไม่มีรายจ่ายจริงของเดือนก่อน เลยเริ่มที่ 15% ก่อน เดือนหน้าโปรแกรมจะปรับให้ตามข้อมูลจริง" };
+  const left = Math.round((inc - used) / inc * 100);
+  const pct = Math.min(30, Math.max(10, left));
+  let why = `เดือนก่อนใช้จ่ายจำเป็น+ส่วนตัวไป ${Math.round(used/inc*100)}% ของรายได้ เหลือ ${left}%`;
+  if(left < 10) why += " ซึ่งต่ำกว่าขั้นต่ำ เลยตั้งไว้ 10% และควรลดรายจ่ายส่วนตัวลง";
+  else if(left > 30) why += " ออมได้เกินเป้ามาก ตั้งไว้ 30% ตามเพดาน";
+  else if(left >= 20) why += " ทำได้ถึงเป้า 20% แล้ว";
+  else why += " ค่อยๆ ขยับไปหา 20%";
+  return { pct, why };
+}
+
+// ---------- UI helpers ----------
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true, 2600); }
+function confirmBox(msg, okLabel, onOk){
+  const root = $("#modalRoot");
+  root.innerHTML = `<div class="modal-back" role="dialog" aria-modal="true"><div class="modal">
+    <p style="font-weight:600">${esc(msg)}</p><p class="muted small">การลบย้อนกลับไม่ได้</p>
+    <div class="row-btns"><button class="secondary" id="mCancel">ยกเลิก</button>
+    <button class="primary" style="margin:0;background:var(--danger);color:#fff" id="mOk">${esc(okLabel)}</button></div></div></div>`;
+  const close = () => root.innerHTML = "";
+  $("#mCancel").onclick = close;
+  $("#mOk").onclick = () => { close(); onOk(); };
+  root.querySelector(".modal-back").onclick = e => { if(e.target.classList.contains("modal-back")) close(); };
+  $("#mCancel").focus();
+}
+function bar(used, budget, color){
+  const pct = budget > 0 ? Math.min(100, used/budget*100) : (used>0?100:0);
+  const over = budget > 0 && used > budget;
+  return `<div class="bar"><i style="width:${pct}%;background:${over?"var(--danger)":color}"></i></div>`;
+}
+
+// ---------- views ----------
+function render(){
+  $("#monthTitle").textContent = monthLabel(viewMonth);
+  const ph = phase();
+  $("#phaseChip").textContent = ph === 1 ? "เฟส 1 · สร้างเงินฉุกเฉิน" : "เฟส 2 · ลงทุน";
+  document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-current", b.dataset.tab===tab ? "page" : "false"));
+  const v = $("#view");
+  if(tab === "summary") v.innerHTML = viewSummary();
+  else if(tab === "add") v.innerHTML = viewAdd();
+  else if(tab === "budget") v.innerHTML = viewBudget();
+  else v.innerHTML = viewSettings();
+  bind();
+}
+
+function viewSummary(){
+  const m = data.months[viewMonth];
+  const tgt = efundTarget(), bal = efundBalance(), ph = phase();
+  const fund = `<div class="sheet"><h2>กองทุนฉุกเฉิน</h2>
+    <div class="fund-big"><strong>${fmt(bal)}</strong><span class="muted">เป้า ${fmt(tgt.value)}</span></div>
+    ${bar(bal, tgt.value, "var(--save)")}
+    <div class="ledger-foot muted"><span>${tgt.value ? Math.min(100,Math.round(bal/tgt.value*100)) : 0}%</span><span>${ph===1 ? "ขาดอีก "+fmt(Math.max(0,tgt.value-bal)) : "ครบเป้าแล้ว"}</span></div>
+    <p class="muted small" style="margin:8px 0 0">${esc(tgt.basis)}</p>
+    <div class="alloc" style="margin-top:8px;border-top:1px solid var(--line)"><span>ลงทุนระยะยาวสะสม</span><strong>${fmt(investTotal())}</strong></div>
+  </div>`;
+  if(!m){
+    return `<div class="sheet empty"><p style="font-weight:600;margin:0 0 4px">ยังไม่ได้ตั้งงบ${esc(monthLabel(viewMonth))}</p>
+      <p class="muted small" style="margin:0">กรอกรายได้เดือนนี้ แล้วโปรแกรมจะแบ่งงบให้</p>
+      <button class="primary" data-go="budget">ตั้งงบเดือนนี้</button></div>` + fund + txList();
+  }
+  const inc = monthIncome(viewMonth);
+  const sp = spentBy(viewMonth);
+  const savePct = m.savePct, wantPct = 100 - NEED_PCT - savePct;
+  const rows = [
+    ["need","จำเป็น",NEED_PCT,"var(--need)",sp.need],
+    ["want","ส่วนตัว",wantPct,"var(--want)",sp.want],
+    ["save", ph===1?"ออม → กองทุนฉุกเฉิน":"ออม → ลงทุน",savePct,"var(--save)",sp.save]
+  ].map(([k,name,pct,color,used]) => {
+    const budget = inc*pct/100, left = budget-used;
+    const isSave = k === "save";
+    const foot = isSave
+      ? (left > 0 ? `<span class="muted">ยังต้องโอนอีก ${fmt(left)}</span>` : `<span style="color:var(--save);font-weight:600">โอนครบแล้ว</span>`)
+      : (left >= 0 ? `<span class="muted">เหลือ ${fmt(left)}</span>` : `<span class="over">เกินงบ ${fmt(-left)}</span>`);
+    return `<div class="ledger-row"><div class="ledger-head">
+      <span class="ledger-name"><span class="dot" style="background:${color}"></span>${name} <span class="muted small">${pct}%</span></span>
+      <span class="ledger-nums">${fmt(used)} / ${fmt(budget)}</span></div>
+      ${bar(used,budget,color)}<div class="ledger-foot">${foot}<span class="muted">${budget?Math.round(used/budget*100):0}%</span></div></div>`;
+  }).join("");
+  return `<div class="sheet">
+    <div class="income"><span class="muted">รายได้เดือนนี้</span><strong>${fmt(inc)}</strong></div>
+    ${m.extra ? `<p class="muted small" style="margin:0">เงินเดือน ${fmt(m.salary)} + OT/โบนัส ${fmt(m.extra)}</p>` : ""}
+    ${rows}</div>` + fund + txList();
+}
+
+function txList(){
+  const list = txIn(viewMonth).sort((a,b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+  if(!list.length) return `<div class="sheet"><h2>รายการเดือนนี้</h2><p class="muted" style="margin:0">ยังไม่มีรายการ กด "จดรายการ" ด้านล่างเพื่อเริ่ม</p></div>`;
+  return `<div class="sheet"><h2>รายการเดือนนี้</h2>` + list.map(t => {
+    const c = catById(t.cat);
+    const title = t.kind==="expense" ? (c ? c.name : "หมวดที่ถูกลบ") : KINDS[t.kind];
+    const color = t.kind==="expense" ? (c && c.group==="need" ? "var(--need)" : "var(--want)") : (t.kind==="efund_out" ? "var(--danger)" : "var(--save)");
+    const sign = t.kind==="efund_out" ? "−" : "";
+    const d = new Date(t.date+"T00:00:00").toLocaleDateString("th-TH",{day:"numeric",month:"short"});
+    return `<div class="tx"><span class="dot" style="background:${color}"></span>
+      <div class="tx-main"><div class="tx-cat">${esc(title)}</div><div class="muted small">${d}${t.note ? " · "+esc(t.note) : ""}</div></div>
+      <span class="tx-amt">${sign}${fmt(t.amount)}</span>
+      <button class="icon-btn" data-del="${esc(t.id)}" aria-label="ลบรายการ">✕</button></div>`;
+  }).join("") + `</div>`;
+}
+
+function viewAdd(){
+  const def = viewMonth === monthOf(todayISO()) ? todayISO() : viewMonth + "-01";
+  const opts = g => data.categories.filter(c=>c.group===g).map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
+  const ph = phase();
+  return `<div class="sheet"><h2>จดรายการ</h2>
+    <div class="seg" role="group" aria-label="ประเภท">
+      ${Object.entries(KINDS).map(([k,l]) => `<button data-kind="${k}" aria-pressed="${addKind===k}">${l}</button>`).join("")}
+    </div>
+    ${addKind !== "expense" ? `<p class="muted small" style="margin:10px 0 0">${ph===1 ? "ตอนนี้อยู่เฟส 1 ก้อนออมควรเข้ากองทุนฉุกเฉินก่อน" : "กองทุนฉุกเฉินครบแล้ว ก้อนออมไปลงทุนได้"} · คงเหลือกองทุนฉุกเฉิน ${fmt(efundBalance())}</p>` : ""}
+    ${addKind === "expense" ? `<label class="f" for="aCat">หมวด</label>
+      <select id="aCat"><optgroup label="จำเป็น">${opts("need")}</optgroup><optgroup label="ส่วนตัว">${opts("want")}</optgroup></select>` : ""}
+    <label class="f" for="aAmt">จำนวนเงิน (บาท)</label>
+    <input id="aAmt" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0">
+    <label class="f" for="aDate">วันที่</label>
+    <input id="aDate" type="date" value="${def}">
+    <label class="f" for="aNote">โน้ต (ไม่บังคับ)</label>
+    <input id="aNote" type="text" maxlength="80" placeholder="เช่น ข้าวกลางวัน">
+    <div class="err" id="aErr"></div>
+    <button class="primary" id="aSave">บันทึกรายการ</button></div>`;
+}
+
+function viewBudget(){
+  if(!draft || draft.month !== viewMonth){
+    const m = data.months[viewMonth];
+    const rec = recommendSave(viewMonth);
+    draft = { month:viewMonth, salary: m ? m.salary : "", extra: m ? m.extra : "", savePct: m ? m.savePct : rec.pct };
+    step = 1;
+  }
+  const dots = [1,2,3].map(i => `<span class="${i<=step?"on":""}"></span>`).join("");
+  if(step === 1){
+    return `<div class="sheet"><div class="steps">${dots}</div><h2>ขั้นที่ 1 · รายได้${esc(monthLabel(viewMonth))}</h2>
+      <label class="f" for="bSal">เงินเดือน (บาท)</label>
+      <input id="bSal" type="number" inputmode="decimal" min="0" value="${esc(draft.salary)}" placeholder="0">
+      <label class="f" for="bExt">OT / โบนัส เดือนนี้ (ถ้ามี)</label>
+      <input id="bExt" type="number" inputmode="decimal" min="0" value="${esc(draft.extra)}" placeholder="0">
+      <p class="muted small">OT และโบนัสจะรวมกับเงินเดือน แล้วแบ่งตามสัดส่วนเดียวกัน</p>
+      <div class="err" id="bErr"></div>
+      <button class="primary" id="b1Next">ถัดไป</button></div>`;
+  }
+  const inc = (Number(draft.salary)||0) + (Number(draft.extra)||0);
+  if(step === 2){
+    const rec = recommendSave(viewMonth);
+    return `<div class="sheet"><div class="steps">${dots}</div><h2>ขั้นที่ 2 · สัดส่วนออม</h2>
+      <div class="rec"><strong>แนะนำ ${rec.pct}%</strong><br>${esc(rec.why)}</div>
+      <p class="pct-big" id="pctOut">${draft.savePct}%</p>
+      <p class="muted small" style="text-align:center;margin:0 0 6px" id="pctBaht">${fmt(inc*draft.savePct/100)} ต่อเดือน</p>
+      <input id="bPct" type="range" min="5" max="40" step="1" value="${draft.savePct}" aria-label="เปอร์เซ็นต์ออม">
+      <p class="muted small">หมวดจำเป็นคงที่ ${NEED_PCT}% ส่วนที่เหลือเป็นเงินใช้ส่วนตัว</p>
+      <div class="row-btns"><button class="secondary" id="b2Back">ย้อนกลับ</button><button class="primary" style="margin:0" id="b2Next">ถัดไป</button></div></div>`;
+  }
+  const wantPct = 100 - NEED_PCT - draft.savePct;
+  const ph = phase();
+  return `<div class="sheet"><div class="steps">${dots}</div><h2>ขั้นที่ 3 · ตรวจงบก่อนบันทึก</h2>
+    <div class="alloc"><span class="muted">รายได้รวม</span><strong>${fmt(inc)}</strong></div>
+    <div class="alloc"><span><span class="dot" style="background:var(--need)"></span> จำเป็น ${NEED_PCT}%</span><strong>${fmt(inc*NEED_PCT/100)}</strong></div>
+    <div class="alloc"><span><span class="dot" style="background:var(--want)"></span> ส่วนตัว ${wantPct}%</span><strong>${fmt(inc*wantPct/100)}</strong></div>
+    <div class="alloc"><span><span class="dot" style="background:var(--save)"></span> ออม ${draft.savePct}%</span><strong>${fmt(inc*draft.savePct/100)}</strong></div>
+    <div class="rec" style="margin-top:12px">${ph===1
+      ? `ก้อนออมเดือนนี้โอนเข้า<strong>กองทุนฉุกเฉิน</strong> ตั้งโอนอัตโนมัติวันเงินเดือนออกจะช่วยให้ไม่ลืม`
+      : `กองทุนฉุกเฉินครบเป้าแล้ว ก้อนออมเดือนนี้ไป<strong>ลงทุนระยะยาว</strong>`}</div>
+    <div class="row-btns"><button class="secondary" id="b3Back">ย้อนกลับ</button><button class="primary" style="margin:0" id="b3Save">บันทึกงบ</button></div></div>`;
+}
+
+function viewSettings(){
+  const catRows = data.categories.map(c => `<div class="cat-item">
+      <input type="text" value="${esc(c.name)}" data-rename="${esc(c.id)}" aria-label="ชื่อหมวด">
+      <select data-group="${esc(c.id)}" aria-label="กลุ่ม">
+        <option value="need" ${c.group==="need"?"selected":""}>จำเป็น</option>
+        <option value="want" ${c.group==="want"?"selected":""}>ส่วนตัว</option></select>
+      <button class="icon-btn" data-delcat="${esc(c.id)}" aria-label="ลบหมวด">✕</button></div>`).join("");
+  return `<div class="sheet"><h2>หมวดรายจ่าย</h2>${catRows}
+    <div class="cat-item" style="border-top:1px dashed var(--line);margin-top:6px">
+      <input type="text" id="newCat" placeholder="ชื่อหมวดใหม่" maxlength="40">
+      <select id="newGroup"><option value="need">จำเป็น</option><option value="want" selected>ส่วนตัว</option></select>
+      <button class="secondary" id="addCat">เพิ่ม</button></div>
+    <p class="muted small" style="margin:8px 0 0">แก้ชื่อแล้วแตะที่อื่นเพื่อบันทึก ย้ายหมวดข้ามกลุ่มได้ ตัวเลขย้อนหลังจะคำนวณใหม่ตามกลุ่มปัจจุบัน</p></div>
+  <div class="sheet"><h2>สำรองข้อมูล</h2>
+    <p class="muted small" style="margin:0 0 4px">ข้อมูลเก็บในเบราว์เซอร์เครื่องนี้เท่านั้น ถ้าล้างข้อมูลเบราว์เซอร์หรือเปลี่ยนเครื่องจะหาย ควร Export ทุกสิ้นเดือน</p>
+    <div class="row-btns"><button class="secondary" id="expBtn">Export CSV</button><button class="secondary" id="impBtn">Import CSV</button></div>
+    <p class="muted small" style="margin:10px 0 0">Import จะรวมกับข้อมูลเดิมและข้ามรายการที่มีอยู่แล้ว ไม่ลบหรือทับของเดิม</p>
+    <p class="muted small" style="margin:6px 0 0">${data.tx.length} รายการ · ${Object.keys(data.months).length} เดือนที่ตั้งงบ</p></div>`;
+}
+
+// ---------- events ----------
+function bind(){
+  document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { tab = b.dataset.go; render(); });
+  document.querySelectorAll("[data-del]").forEach(b => b.onclick = () => {
+    const t = data.tx.find(x => x.id === b.dataset.del); if(!t) return;
+    const c = catById(t.cat);
+    const name = t.kind==="expense" ? (c?c.name:"รายการ") : KINDS[t.kind];
+    confirmBox(`ลบ "${name}" ${fmt(t.amount)} ?`, "ลบรายการ", () => {
+      data.tx = data.tx.filter(x => x.id !== t.id); save(); render(); toast("ลบรายการแล้ว");
+    });
+  });
+  if(tab === "add"){
+    document.querySelectorAll("[data-kind]").forEach(b => b.onclick = () => { addKind = b.dataset.kind; render(); });
+    $("#aSave").onclick = () => {
+      const amt = parseFloat($("#aAmt").value), date = $("#aDate").value, err = $("#aErr");
+      if(!(amt > 0)){ err.textContent = "กรอกจำนวนเงินมากกว่า 0"; return; }
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){ err.textContent = "เลือกวันที่"; return; }
+      if(addKind === "efund_out" && amt > efundBalance() + 1e-9){ err.textContent = `ถอนได้ไม่เกินยอดคงเหลือ ${fmt(efundBalance())}`; return; }
+      const t = { id:uid(), date, kind:addKind, amount:Math.round(amt*100)/100, cat: addKind==="expense" ? $("#aCat").value : "", note: $("#aNote").value.trim() };
+      const before = phase();
+      data.tx.push(t); save();
+      viewMonth = monthOf(date);
+      const after = phase();
+      $("#aAmt").value = ""; $("#aNote").value = ""; err.textContent = "";
+      render();
+      if(before === 1 && after === 2) toast("กองทุนฉุกเฉินครบเป้าแล้ว ก้อนออมต่อไปไปลงทุนได้");
+      else if(before === 2 && after === 1) toast("ยอดต่ำกว่าเป้า กลับไปเติมกองทุนฉุกเฉินก่อน");
+      else toast("บันทึกรายการแล้ว");
+    };
+  }
+  if(tab === "budget"){
+    if(step === 1) $("#b1Next").onclick = () => {
+      const s = parseFloat($("#bSal").value), e = parseFloat($("#bExt").value) || 0;
+      if(!(s > 0)){ $("#bErr").textContent = "กรอกเงินเดือนมากกว่า 0"; return; }
+      if(e < 0){ $("#bErr").textContent = "OT/โบนัสติดลบไม่ได้"; return; }
+      draft.salary = s; draft.extra = e; step = 2; render();
+    };
+    if(step === 2){
+      const inc = (Number(draft.salary)||0) + (Number(draft.extra)||0);
+      $("#bPct").oninput = e => { draft.savePct = Number(e.target.value); $("#pctOut").textContent = draft.savePct+"%"; $("#pctBaht").textContent = fmt(inc*draft.savePct/100)+" ต่อเดือน"; };
+      $("#b2Back").onclick = () => { step = 1; render(); };
+      $("#b2Next").onclick = () => { step = 3; render(); };
+    }
+    if(step === 3){
+      $("#b3Back").onclick = () => { step = 2; render(); };
+      $("#b3Save").onclick = () => {
+        data.months[viewMonth] = { salary:Number(draft.salary), extra:Number(draft.extra)||0, savePct:draft.savePct };
+        save(); draft = null; tab = "summary"; render(); toast("บันทึกงบแล้ว");
+      };
+    }
+  }
+  if(tab === "settings"){
+    document.querySelectorAll("[data-rename]").forEach(i => i.onchange = () => {
+      const c = catById(i.dataset.rename), v = i.value.trim();
+      if(!v){ i.value = c.name; return; }
+      c.name = v; save(); toast("เปลี่ยนชื่อหมวดแล้ว");
+    });
+    document.querySelectorAll("[data-group]").forEach(s => s.onchange = () => { catById(s.dataset.group).group = s.value; save(); toast("ย้ายกลุ่มแล้ว"); });
+    document.querySelectorAll("[data-delcat]").forEach(b => b.onclick = () => {
+      const c = catById(b.dataset.delcat);
+      const used = data.tx.filter(t => t.cat === c.id).length;
+      if(used){ toast(`หมวดนี้มี ${used} รายการ ลบไม่ได้ ให้เปลี่ยนชื่อแทน`); return; }
+      if(data.categories.filter(x => x.group === c.group).length <= 1){ toast("ต้องมีอย่างน้อย 1 หมวดในแต่ละกลุ่ม"); return; }
+      confirmBox(`ลบหมวด "${c.name}" ?`, "ลบหมวด", () => { data.categories = data.categories.filter(x => x.id !== c.id); save(); render(); toast("ลบหมวดแล้ว"); });
+    });
+    $("#addCat").onclick = () => {
+      const n = $("#newCat").value.trim(); if(!n){ toast("พิมพ์ชื่อหมวดก่อน"); return; }
+      data.categories.push({ id:uid(), name:n, group:$("#newGroup").value }); save(); render(); toast("เพิ่มหมวดแล้ว");
+    };
+    $("#expBtn").onclick = exportCSV;
+    $("#impBtn").onclick = () => $("#fileIn").click();
+  }
+}
+
+// ---------- CSV ----------
+const COLS = ["record","id","date","kind","amount","category_id","category_name","group","note","salary","extra","save_pct"];
+const csvCell = v => { const s = String(v ?? ""); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; };
+function buildCSV(){
+  const rows = [COLS];
+  data.categories.forEach(c => rows.push(["category",c.id,"","","",c.id,c.name,c.group,"","","",""]));
+  Object.keys(data.months).sort().forEach(k => { const m = data.months[k]; rows.push(["month",k,"","","","","","","",m.salary,m.extra,m.savePct]); });
+  data.tx.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(t => {
+    const c = catById(t.cat);
+    rows.push(["tx",t.id,t.date,t.kind,t.amount,t.cat||"",c?c.name:(t.kind==="expense"?"":KINDS[t.kind]),c?c.group:"",t.note||"","","",""]);
+  });
+  return "\uFEFF" + rows.map(r => r.map(csvCell).join(",")).join("\r\n");
+}
+async function exportCSV(){
+  const csv = buildCSV();
+  const filename = `budget-backup-${todayISO()}.csv`;
+  let dl = null;
+  try{ if(window.claude && window.claude.use) dl = await window.claude.use("downloads"); }catch(e){}
+  if(dl){
+    try{ await dl.save({ filename, data: csv }); toast("บันทึกไฟล์แล้ว"); }
+    catch(e){
+      if(e && e.code === "declined") toast("ยกเลิกการบันทึกไฟล์");
+      else if(e && e.code === "rate_limited") toast("มีหน้าต่างบันทึกเปิดอยู่ ลองใหม่อีกครั้ง");
+      else toast("บันทึกไฟล์ไม่ได้ในหน้านี้");
+    }
+    return;
+  }
+  try{
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+    a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    toast("บันทึกไฟล์แล้ว");
+  }catch(e){ toast("บันทึกไฟล์ไม่ได้ในหน้านี้"); }
+}
+function parseCSV(text){
+  text = text.replace(/^\uFEFF/,"");
+  const rows = []; let row = [], cell = "", q = false;
+  for(let i=0;i<text.length;i++){
+    const ch = text[i];
+    if(q){
+      if(ch === '"'){ if(text[i+1] === '"'){ cell += '"'; i++; } else q = false; }
+      else cell += ch;
+    } else if(ch === '"') q = true;
+    else if(ch === ","){ row.push(cell); cell = ""; }
+    else if(ch === "\n" || ch === "\r"){
+      if(ch === "\r" && text[i+1] === "\n") i++;
+      row.push(cell); rows.push(row); row = []; cell = "";
+    } else cell += ch;
+  }
+  if(cell !== "" || row.length){ row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(c => c.trim() !== ""));
+}
+function importCSV(text){
+  const rows = parseCSV(text);
+  if(!rows.length) throw new Error("ไฟล์ว่าง");
+  const head = rows[0].map(h => h.trim());
+  const ix = {}; COLS.forEach(c => ix[c] = head.indexOf(c));
+  if(ix.record < 0 || ix.id < 0) throw new Error("ไฟล์นี้ไม่ใช่ไฟล์ที่ Export จากโปรแกรมนี้");
+  const g = (r,c) => ix[c] >= 0 ? (r[ix[c]] ?? "").trim() : "";
+  let added = 0, skipped = 0, bad = 0;
+  const txIds = new Set(data.tx.map(t => t.id));
+  rows.slice(1).forEach(r => {
+    const rec = g(r,"record"), id = g(r,"id");
+    if(!id){ bad++; return; }
+    if(rec === "category"){
+      if(catById(id)){ skipped++; return; }
+      const grp = g(r,"group") === "need" ? "need" : "want";
+      data.categories.push({ id, name: g(r,"category_name") || "หมวดนำเข้า", group: grp }); added++;
+    } else if(rec === "month"){
+      if(!/^\d{4}-\d{2}$/.test(id)){ bad++; return; }
+      if(data.months[id]){ skipped++; return; }
+      const sal = parseFloat(g(r,"salary")), ext = parseFloat(g(r,"extra")) || 0, sp = parseInt(g(r,"save_pct"),10);
+      if(!(sal > 0) || !(sp >= 5 && sp <= 40)){ bad++; return; }
+      data.months[id] = { salary: sal, extra: ext, savePct: sp }; added++;
+    } else if(rec === "tx"){
+      if(txIds.has(id)){ skipped++; return; }
+      const kind = g(r,"kind"), amt = parseFloat(g(r,"amount")), date = g(r,"date");
+      if(!KINDS[kind] || !(amt > 0) || !/^\d{4}-\d{2}-\d{2}$/.test(date)){ bad++; return; }
+      data.tx.push({ id, date, kind, amount: amt, cat: kind==="expense" ? g(r,"category_id") : "", note: g(r,"note") });
+      txIds.add(id); added++;
+    } else bad++;
+  });
+  save();
+  return { added, skipped, bad };
+}
+$("#fileIn").onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try{
+      const r = importCSV(String(rd.result));
+      render();
+      toast(`นำเข้า ${r.added} รายการ · ข้ามที่ซ้ำ ${r.skipped}${r.bad ? " · อ่านไม่ได้ "+r.bad : ""}`);
+    }catch(err){ toast("นำเข้าไม่ได้: " + err.message); }
+    e.target.value = "";
+  };
+  rd.onerror = () => toast("อ่านไฟล์ไม่ได้");
+  rd.readAsText(f, "utf-8");
+};
+
+// ---------- nav ----------
+document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); window.scrollTo(0,0); });
+$("#prevM").onclick = () => { viewMonth = shiftMonth(viewMonth,-1); draft = null; render(); };
+$("#nextM").onclick = () => { viewMonth = shiftMonth(viewMonth,1); draft = null; render(); };
+
+render();
+})();
+</script>
+</body>
+</html>
